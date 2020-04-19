@@ -1,0 +1,27 @@
+{
+  "name": "bridge-arduino-db",
+  "version": "1.0.0",
+  "description": "Process the MQTT messages received by the prototype and transfer them to the database",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KumbayaHHS/bridge-arduino-db.git"
+  },
+  "author": "briceln",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KumbayaHHS/bridge-arduino-db/issues"
+  },
+  "homepage": "https://github.com/KumbayaHHS/bridge-arduino-db#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "cookie-parser": "~1.4.5",
+    "debug": "~4.1.1",
+    "http-errors": "~1.7.3",
+    "morgan": "~1.10.0"
+  }
+}
