@@ -2,7 +2,7 @@
 
 bridge-arduino-db is a server, based on NodeJS, that retrieves the messages sent by the devices to the Azure IoT Hub and transfers these messages to the database.
 
-## Table of content
+## Table of contents
 
 - [Setup your development environment](#I-Setup-your-development-environment)
     - [1. Installing the dependencies](#1-installing-the-dependencies)
