@@ -3,7 +3,11 @@ const Protocol = require('azure-iot-device-mqtt').Mqtt;
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
 
-// The following environment constiable need to be set
+const CosmosClient = require("@azure/cosmos").CosmosClient;
+const config = require("./cosmoDB_config");
+const dbContext = require("./data/databaseContext");
+
+// The following environment variable need to be set
 const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
 const certFile = process.env.PATH_TO_CERTIFICATE_FILE;
 const keyFile = process.env.PATH_TO_KEY_FILE;
@@ -16,15 +20,38 @@ const options = {
 };
 
 // Callback function for Client Object
-const connectCallback = function (err) {
+const connectCallback = async function (err) {
 	if (err) {
 		console.error('Could not connect: ' + err.message);
 	} else {
-		console.log('Client connected');
+		console.log('MQTT Client connected');
+
+		const {endpoint, key, databaseId, containerId} = config;
+
+		const client = new CosmosClient({endpoint, key});
+
+		const database = client.database(databaseId);
+		const container = database.container(containerId);
+
+		// Make sure Tasks database is already setup. If not, create it.
+		await dbContext.create(client, databaseId, containerId);
 
 		// Read one message
-		client.on('message', function (msg) {
-			console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
+		client.on('message', async function (msg) {
+			// console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
+
+			const newItem = {
+				userid: "",
+				measureDate: "",
+				soiltype: "",
+				nParam: "",
+				pParam: "",
+				kParam: "",
+				pHParam: ""
+			};
+
+			const {resource: createdItem} = await container.items.create(newItem);
+
 			client.complete(msg, printResultFor('completed'));
 		});
 
