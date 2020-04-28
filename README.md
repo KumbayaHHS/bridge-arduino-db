@@ -8,6 +8,7 @@ bridge-arduino-db is a server, based on NodeJS, that retrieves the messages sent
     - [1. Installing the dependencies](#1-installing-the-dependencies)
     - [2. Create an x.509 certificate](#2-create-an-x509-certificate)
     - [3. Set environment variable](#3-set-environment-variable)
+    - [4. Set cosmoDB configuration](#4-set-cosmodb-configuration)
 
 ## I. Setup your development environment
 
@@ -53,4 +54,20 @@ export PATH_TO_KEY_FILE="<PATH_TO_KEY_FILE>"
 
 # Passphrase of the certificate, if one exists
 export KEY_PASSPHRASE_OR_EMPTY="<KEY_PASSPHRASE_OR_EMPTY>"
+```
+
+### 4. Set cosmoDB configuration
+
+Copy and paste the following code into the cosmoDB_config.js file and fill in the fields with information from your Azure CosmoDB database.
+**You will find the information for "endpoint" and "key" in the tab "Keys" in the section "Security".**
+```javascript
+const config = {
+	endpoint: "",       // URI of the database
+	key: "",            // Primary Key of the database
+	databaseId: "",     // Name of the database
+	containerId: "",    // Name of the collection in the database
+	partitionKey: {kind: "Hash", paths: ["/category"]}
+};
+
+module.exports = config;
 ```
