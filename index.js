@@ -1,85 +1,85 @@
-const fs = require('fs');
-const Protocol = require('azure-iot-device-mqtt').Mqtt;
-const Client = require('azure-iot-device').Client;
-const Message = require('azure-iot-device').Message;
+const {EventHubConsumerClient} = require("@azure/event-hubs");
 
 const CosmosClient = require("@azure/cosmos").CosmosClient;
 const config = require("./cosmoDB_config");
 const dbContext = require("./data/databaseContext");
 
-// The following environment variable need to be set
-const deviceConnectionString = process.env.DEVICE_CONNECTION_STRING;
-const certFile = process.env.PATH_TO_CERTIFICATE_FILE;
-const keyFile = process.env.PATH_TO_KEY_FILE;
-const passphrase = process.env.KEY_PASSPHRASE_OR_EMPTY;
+const moment = require("moment");
 
-const options = {
-	cert: fs.readFileSync(certFile, 'utf-8').toString(),
-	key: fs.readFileSync(keyFile, 'utf-8').toString(),
-	passphrase: passphrase
+// Event Hub-compatible endpoint
+// az iot hub show --query properties.eventHubEndpoints.events.endpoint --name {your IoT Hub name}
+const eventHubsCompatibleEndpoint = "sb://iothub-ns-kumbaya-hu-3564860-2bba2f4889.servicebus.windows.net";
+
+// Event Hub-compatible name
+// az iot hub show --query properties.eventHubEndpoints.events.path --name {your IoT Hub name}
+const eventHubsCompatiblePath = "kumbaya-hub";
+
+// Primary key for the "service" policy to read messages
+// az iot hub policy show --name service --query primaryKey --hub-name {your IoT Hub name}
+const iotHubSasKey = "H9noa1guGa+Ru+T9biGFkLods/gZPa8YpbtvKo1hq4Q=";
+
+// If you have access to the Event Hub-compatible connection string from the Azure portal, then
+// you can skip the Azure CLI commands above, and assign the connection string directly here.
+const connectionString = `Endpoint=${eventHubsCompatibleEndpoint}/;EntityPath=${eventHubsCompatiblePath};SharedAccessKeyName=service;SharedAccessKey=${iotHubSasKey}`;
+
+let printError = function (err) {
+	console.log(err.message);
 };
 
-// Callback function for Client Object
-const connectCallback = async function (err) {
-	if (err) {
-		console.error('Could not connect: ' + err.message);
-	} else {
-		console.log('MQTT Client connected');
+const {endpoint, key, databaseId, containerId} = config;
 
-		const {endpoint, key, databaseId, containerId} = config;
+const client = new CosmosClient({endpoint, key});
 
-		const client = new CosmosClient({endpoint, key});
+const database = client.database(databaseId);
+const container = database.container(containerId);
 
-		const database = client.database(databaseId);
-		const container = database.container(containerId);
+// Display the message content - telemetry and properties.
+// - Telemetry is sent in the message body
+// - The device can add arbitrary properties to the message
+// - IoT Hub adds system properties, such as Device Id, to the message.
+let printMessages = async function (messages) {
+	for (const message of messages) {
+		console.log("Telemetry received: ");
+		console.log(JSON.stringify(message.body));
+		console.log("Properties (set by device): ");
+		console.log(JSON.stringify(message.properties));
+		console.log("System properties (set by IoT Hub): ");
+		console.log(JSON.stringify(message.systemProperties));
+		console.log("");
+		const tmp = {
+			"userid": message.body.user_id,
+			"measureDate": moment.unix(parseInt(message.body.create_at)).format('YYYY-MM-DD'),
+			"soiltype": "",
+			"nParam": message.body.n_param,
+			"pParam": message.body.p_param,
+			"kParam": message.body.k_param,
+			"pHParam": message.body.ph_param
+		};
+		console.log(tmp);
 
-		// Make sure Tasks database is already setup. If not, create it.
+		// Make sure the database is already setup. If not, create it.
 		await dbContext.create(client, databaseId, containerId);
 
-		// Read one message
-		client.on('message', async function (msg) {
-			// console.log('Id: ' + msg.messageId + ' Body: ' + msg.data);
+		const {resource: createdItem} = await container.items.create(tmp);
 
-			const newItem = {
-				userid: "",
-				measureDate: "",
-				soiltype: "",
-				nParam: "",
-				pParam: "",
-				kParam: "",
-				pHParam: ""
-			};
-
-			const {resource: createdItem} = await container.items.create(newItem);
-
-			client.complete(msg, printResultFor('completed'));
-		});
-
-		// When an error occur print the message in the console
-		client.on('error', function (err) {
-			console.error(err.message);
-		});
-
-		// When a disconnection occurs, restart the connection.
-		client.on('disconnect', function () {
-			client.removeAllListeners();
-			client.open(connectCallback);
-		});
+		console.log(createdItem);
 	}
 };
 
-// Helper function to print results in the console
-function printResultFor(op) {
-	return function printResult(err, res) {
-		if (err) console.log(op + ' error: ' + err.toString());
-		if (res) console.log(op + ' status: ' + res.constructor.name);
-	};
+async function main() {
+	const clientOptions = {};
+
+	// Create the client to connect to the default consumer group of the Event Hub
+	const consumerClient = new EventHubConsumerClient("$Default", connectionString, clientOptions);
+
+	// Subscribe to messages from all partitions as below
+	// To subscribe to messages from a single partition, use the overload of the same method.
+	consumerClient.subscribe({
+		processEvents: printMessages,
+		processError: printError,
+	});
 }
 
-const client = Client.fromConnectionString(deviceConnectionString, Protocol);
-
-// Calling setOptions with the x509 certificate and key (and optionally, passphrase) will configure the client transport to use x509 when connecting to IoT Hub
-client.setOptions(options);
-
-// Start the server
-client.open(connectCallback);
+main().catch((error) => {
+	console.error("An error occur:", error);
+});

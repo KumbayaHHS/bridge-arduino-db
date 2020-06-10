@@ -1,9 +1,9 @@
 const config = {
-	endpoint: "https://kumbaya-sensing.documents.azure.com:443/", // URI
-	key: "eyyr4PyeKsfCuxJHeMlb5e9WEwEtHjIXsc8pIVI8QzTiPec2ZMGYXgcl2Kl4izJ5GkVoB767WeeSHmetr5sqWw==",
-	databaseId: "Tasks",
-	containerId: "Items",
-	partitionKey: {kind: "Hash", paths: ["/category"]}
+	endpoint: "https://malawi-sensing.documents.azure.com:443/", // URI
+	key: "yBWJ4Nmp8e6WpfY7jFrgdGQ1DdbonOKebQ5M6M1bvpT44tKprKCTZqvbBW2GpNvbru2wKn3vYOxZBbFgBXw2ZQ==",
+	databaseId: "KumbayaSensing",
+	containerId: "SoilMeasurement",
+	partitionKey: {kind: "Hash", paths: ["/userid"]}
 };
 
 module.exports = config;
