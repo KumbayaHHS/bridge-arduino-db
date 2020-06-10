@@ -33,19 +33,16 @@ const client = new CosmosClient({endpoint, key});
 const database = client.database(databaseId);
 const container = database.container(containerId);
 
-// Display the message content - telemetry and properties.
-// - Telemetry is sent in the message body
-// - The device can add arbitrary properties to the message
-// - IoT Hub adds system properties, such as Device Id, to the message.
 let printMessages = async function (messages) {
 	for (const message of messages) {
-		console.log("Telemetry received: ");
-		console.log(JSON.stringify(message.body));
-		console.log("Properties (set by device): ");
-		console.log(JSON.stringify(message.properties));
-		console.log("System properties (set by IoT Hub): ");
-		console.log(JSON.stringify(message.systemProperties));
-		console.log("");
+
+		const pH_param = parseFloat(message.body.ph_param);
+
+		if (pH_param < 0.00 || pH_param > 14.0) {
+			console.error('Invalid pH value');
+			continue;
+		}
+
 		const tmp = {
 			"userid": message.body.user_id,
 			"measureDate": moment.unix(parseInt(message.body.create_at)).format('YYYY-MM-DD'),
@@ -55,14 +52,12 @@ let printMessages = async function (messages) {
 			"kParam": message.body.k_param,
 			"pHParam": message.body.ph_param
 		};
-		console.log(tmp);
 
 		// Make sure the database is already setup. If not, create it.
 		await dbContext.create(client, databaseId, containerId);
 
+		// Create Item in the database.
 		const {resource: createdItem} = await container.items.create(tmp);
-
-		console.log(createdItem);
 	}
 };
 
