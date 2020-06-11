@@ -8,15 +8,15 @@ const moment = require("moment");
 
 // Event Hub-compatible endpoint
 // az iot hub show --query properties.eventHubEndpoints.events.endpoint --name {your IoT Hub name}
-const eventHubsCompatibleEndpoint = "sb://iothub-ns-kumbaya-hu-3564860-2bba2f4889.servicebus.windows.net";
+const eventHubsCompatibleEndpoint = process.env.EVENT_HUBS_COMPATIBLE_ENDPOINT;
 
 // Event Hub-compatible name
 // az iot hub show --query properties.eventHubEndpoints.events.path --name {your IoT Hub name}
-const eventHubsCompatiblePath = "kumbaya-hub";
+const eventHubsCompatiblePath = process.env.EVENT_HUBS_COMPATIBLE_PATH;
 
 // Primary key for the "service" policy to read messages
 // az iot hub policy show --name service --query primaryKey --hub-name {your IoT Hub name}
-const iotHubSasKey = "H9noa1guGa+Ru+T9biGFkLods/gZPa8YpbtvKo1hq4Q=";
+const iotHubSasKey = process.env.IOT_HUB_SAS_TOKEN;
 
 // If you have access to the Event Hub-compatible connection string from the Azure portal, then
 // you can skip the Azure CLI commands above, and assign the connection string directly here.

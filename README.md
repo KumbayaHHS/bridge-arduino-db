@@ -6,9 +6,8 @@ bridge-arduino-db is a server, based on NodeJS, that retrieves the messages sent
 
 - [Setup your development environment](#I-Setup-your-development-environment)
     - [1. Installing the dependencies](#1-installing-the-dependencies)
-    - [2. Create an x.509 certificate](#2-create-an-x509-certificate)
-    - [3. Set environment variable](#3-set-environment-variable)
-    - [4. Set cosmoDB configuration](#4-set-cosmodb-configuration)
+    - [2. Set environment variable](#2-set-environment-variable)
+    - [3. Set cosmoDB configuration](#3-set-cosmodb-configuration)
 
 ## I. Setup your development environment
 
@@ -18,56 +17,37 @@ Run the following command in your terminal:
 npm install
 ```
 
-### 2. Create an x.509 certificate
-
-- Execute the following commands to create your certificate authority first:
-```shell script
-mkdir certs
-cd certs
-/usr/share/ssl/misc/CA -newca
-```
-
-- The certificate authority is now ready to go. Let's create a certificate signing request with the following command:
-```shell script
-/usr/share/ssl/misc/CA -newreq
-```
-
-- Finally, sign the certificate using the certificate authority with the following command:
-```shell script
-/usr/share/ssl/misc/CA -sign
-```
-
-### 3. Set environment variable
+### 2. Set environment variable
 
 You can execute the following commands in your terminal, but you will have to run these commands again each time you open a new terminal. It is therefore **recommended** to copy these commands into the source file of your shell, for example .bashrc if you are using bash.
 
 ```shell script
-# String containing Hostname and Device Id in the following format:
-# "HostName=<iothub_host_name>;DeviceId=<device_id>;x509=true"
-export DEVICE_CONNECTION_STRING="<Your_IoT_Hub_Connection_String>"
-
-# Path to the x509 certificate file
-export PATH_TO_CERTIFICATE_FILE="<PATH_TO_CERTIFICATE_FILE>"
-
-# Path to the x509 key file
-export PATH_TO_KEY_FILE="<PATH_TO_KEY_FILE>"
-
-# Passphrase of the certificate, if one exists
-export KEY_PASSPHRASE_OR_EMPTY="<KEY_PASSPHRASE_OR_EMPTY>"
+# Event Hub-compatible endpoint
+# az iot hub show --query properties.eventHubEndpoints.events.endpoint --name {your IoT Hub name}
+export EVENT_HUBS_COMPATIBLE_ENDPOINT="<VALUE_OF_THE_COMMAND_BELOW>"
 ```
 
-### 4. Set cosmoDB configuration
+```shell script
+# Event Hub-compatible name
+# az iot hub show --query properties.eventHubEndpoints.events.path --name {your IoT Hub name}
+export EVENT_HUBS_COMPATIBLE_PATH="<VALUE_OF_THE_COMMAND_BELOW>"
+```
 
-Copy and paste the following code into the cosmoDB_config.js file and fill in the fields with information from your Azure CosmoDB database.
+```shell script
+# Primary key for the "service" policy to read messages
+# az iot hub policy show --name service --query primaryKey --hub-name {your IoT Hub name}
+export IOT_HUB_SAS_TOKEN="<VALUE_OF_THE_COMMAND_BELOW>"
+```
+
+### 3. Set cosmoDB configuration
+
+Fill in the fields in the cosmoDB_config.js file with the information from your Azure CosmoDB database and export the following env variable.
 **You will find the information for "endpoint" and "key" in the tab "Keys" in the section "Security".**
-```javascript
-const config = {
-	endpoint: "",       // URI of the database
-	key: "",            // Primary Key of the database
-	databaseId: "",     // Name of the database
-	containerId: "",    // Name of the collection in the database
-	partitionKey: {kind: "Hash", paths: ["/category"]}
-};
 
-module.exports = config;
+```shell script
+export COSMODB_ENDPOINT="<COSMODB_ENDPOINT>"
+```
+
+```shell script
+export COSMODB_KEY="<COSMODB_KEY>"
 ```
